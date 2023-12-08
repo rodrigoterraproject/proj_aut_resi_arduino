@@ -1,0 +1,77 @@
+#include <IRremote.h>
+
+#define sensorPin 7 // Pino do sensor de presença
+#define led1 2      // Pinos das lâmpadas
+#define led2 3
+#define led3 4
+#define led4 5
+#define led5 6
+#define led6 8
+
+int receiver = 11; // Pino do receptor do controle remoto
+IRrecv irrecv(receiver);
+decode_results results;
+
+void setup() {
+  pinMode(sensorPin, INPUT);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+  pinMode(led3, OUTPUT);
+  pinMode(led4, OUTPUT);
+  pinMode(led5, OUTPUT);
+  pinMode(led6, OUTPUT);
+  
+  Serial.begin(9600);
+  irrecv.enableIRIn(); // Inicializa o receptor do controle remoto
+}
+
+void loop() {
+  if (digitalRead(sensorPin) == HIGH) {
+    // Se o sensor de presença detectar movimento, acende a lâmpada 1
+    digitalWrite(led1, HIGH);
+    printLEDStatus(1);
+    delay(1000); // Tempo de iluminação após detecção de movimento (1 segundo)
+  } else {
+    // Desliga todas as lâmpadas se nenhum movimento for detectado
+    digitalWrite(led1, LOW);
+    digitalWrite(led2, LOW);
+    digitalWrite(led3, LOW);
+    digitalWrite(led4, LOW);
+    digitalWrite(led5, LOW);
+    digitalWrite(led6, LOW);
+    printLEDStatus(0);
+  }
+
+  if (irrecv.decode(&results)) {
+    // Se um sinal do controle remoto for recebido, controla as lâmpadas
+    switch (results.value) {
+      case 0xFFA25D: // Exemplo do código IR do controle remoto
+        toggleLED(2); // Troque o número para controlar diferentes lâmpadas
+        break;
+      // Adicione outros códigos IR para controlar outras lâmpadas
+    }
+    irrecv.resume(); // Recebe o próximo valor
+  }
+}
+
+void toggleLED(int ledNum) {
+  // Inverte o estado de uma lâmpada específica
+  if (digitalRead(ledNum) == LOW) {
+    digitalWrite(ledNum, HIGH);
+  } else {
+    digitalWrite(ledNum, LOW);
+  }
+  printLEDStatus(ledNum);
+}
+
+void printLEDStatus(int ledNum) {
+  // Mostra na porta serial qual lâmpada está acesa
+  Serial.print("Lâmpada ");
+  Serial.print(ledNum);
+  if (ledNum == 0) {
+    Serial.println(" desligada");
+  } else {
+    Serial.println(" acesa");
+  }
+}
+
